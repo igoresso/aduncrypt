@@ -5,7 +5,7 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 # Install packages
-RUN apk --no-cache add ca-certificates libcap tzdata unbound dnscrypt-proxy && \
+RUN apk --no-cache add ca-certificates libcap tzdata unbound dnscrypt-proxy bind-tools && \
 	mkdir -p /opt/adguardhome/conf /opt/adguardhome/work && \
 	chown -R nobody:nogroup /opt/adguardhome
 
