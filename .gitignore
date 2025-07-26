@@ -1,0 +1,38 @@
+# Runtime data and configurations
+adguard/opt-adguard-conf/*
+!adguard/opt-adguard-conf/.gitkeep
+adguard/opt-adguard-work/*
+!adguard/opt-adguard-work/.gitkeep
+
+# Log files
+*.log
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.swp
+*~
+*.bak
+*.backup
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.sublime-*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Docker runtime
+.docker/

@@ -1,0 +1,29 @@
+# Build files
+
+Containerfile
+compose.yml
+.containerignore
+
+# Git and documentation
+
+.git
+.gitignore
+README.md
+\*.md
+
+# Runtime data (these are mounted as volumes)
+
+adguard/opt-adguard-work/
+adguard/opt-adguard-conf/
+
+# Development files
+
+.vscode/
+_.log
+_.tmp
+
+# OS files
+
+.DS_Store
+Thumbs.db
+*~
