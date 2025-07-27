@@ -1,0 +1,74 @@
+name: Update AdGuard Home Version
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # Daily at 6 AM
+  workflow_dispatch:
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get current AGH version from Containerfile
+        id: current
+        run: |
+          CURRENT_VERSION=$(grep -oP '(?<=AGH_VER=)\S+' Containerfile)
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current AdGuard Home version: $CURRENT_VERSION"
+
+      - name: Get latest AGH version
+        id: latest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | jq -r '.tag_name')
+          echo "LATEST_VERSION=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest AdGuard Home version: $LATEST"
+
+      - name: Check if update is needed
+        id: check
+        run: |
+          if [ "${{ steps.current.outputs.CURRENT_VERSION }}" != "${{ steps.latest.outputs.LATEST_VERSION }}" ]; then
+            echo "UPDATE_NEEDED=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Update needed: ${{ steps.current.outputs.CURRENT_VERSION }} → ${{ steps.latest.outputs.LATEST_VERSION }}"
+          else
+            echo "UPDATE_NEEDED=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  No update needed, already on latest version: ${{ steps.current.outputs.CURRENT_VERSION }}"
+          fi
+
+      - name: Update Containerfile
+        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+        run: |
+          # Update Containerfile
+          sed -i "s/AGH_VER=${{ steps.current.outputs.CURRENT_VERSION }}/AGH_VER=${{ steps.latest.outputs.LATEST_VERSION }}/" Containerfile
+
+          # Verify changes
+          echo "✅ Updated files:"
+          grep "AGH_VER=" Containerfile
+
+      - name: Create Pull Request
+        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
+          title: "🚀 Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
+          body: |
+            ## 🔄 AdGuard Home Version Update
+
+            **Current version:** `${{ steps.current.outputs.CURRENT_VERSION }}`
+            **New version:** `${{ steps.latest.outputs.LATEST_VERSION }}`
+
+            ### Changes
+            - Updated `AGH_VER` in Containerfile
+            - This will trigger a new multi-architecture build when merged
+
+            ### Links
+            - 📋 [Release Notes](https://github.com/AdguardTeam/AdGuardHome/releases/tag/${{ steps.latest.outputs.LATEST_VERSION }})
+            - 🔗 [Container Registry](https://github.com/${{ github.repository_owner }}/pkgs/container/aduncrypt)
+
+            ---
+            *This PR was created automatically by the update-version workflow*
+          branch: update-agh-${{ steps.latest.outputs.LATEST_VERSION }}
+          delete-branch: true
