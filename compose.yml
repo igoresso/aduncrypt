@@ -1,9 +1,6 @@
 services:
   aduncrypt:
-    build:
-      context: .
-      dockerfile: Containerfile
-    # image: ghcr.io/hat3ph/aduncrypt
+    image: ghcr.io/igoresso/aduncrypt
     restart: unless-stopped
     volumes:
       - "./adguard/opt-adguard-work:/opt/adguardhome/work"
@@ -13,7 +10,7 @@ services:
     ports:
       - 53:53/tcp # Primary DNS
       - 53:53/udp # Primary DNS
-      - 3000:3000/tcp # AdGuard Home install web panel. Can disable after installation is completed.
+      - 3000:3000/tcp # AdGuard Home install web panel. Disable after installation is completed.
       - 80:80/tcp # AdGuard Home web panel HTTP
       #- 443:443/tcp # AdGuard Home web panel HTTPS
       #- 443:443/udp # AdGuard Home web panel HTTPS
