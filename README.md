@@ -1,5 +1,7 @@
 # 🔒 AdUnCrypt - Privacy-Focused DNS Stack
 
+![AdGuard Home](https://img.shields.io/badge/dynamic/dockerfile?url=https%3A%2F%2Fraw.githubusercontent.com%2Figoresso%2Faduncrypt%2Fmaster%2FContainerfile&query=%24..AGH_VER&label=AdGuard%20Home&color=green&logo=adguard)
+![Build Status](https://img.shields.io/github/actions/workflow/status/igoresso/aduncrypt/publish.yml?branch=master&label=Build&logo=github)
 ![DNS Flow](https://img.shields.io/badge/DNS%20Flow-AdGuard%20→%20Unbound%20→%20DNSCrypt-blue)
 ![Privacy](https://img.shields.io/badge/Privacy-ODoH%20Enabled-green)
 ![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%20Ready-orange)
@@ -28,14 +30,14 @@ sudo apt install podman podman-compose
 ### System Configuration
 
 1. **Enable privileged port binding** (required for DNS port 53):
-By default, rootless Podman doesn't allow exposing a privileged port (<1024). Unless you are happy to use an unconventional DNS port, to avoid an error run:
+   By default, rootless Podman doesn't allow exposing a privileged port (<1024). Unless you are happy to use an unconventional DNS port, to avoid an error run:
 
 ```bash
 echo "net.ipv4.ip_unprivileged_port_start=53" | sudo tee /etc/sysctl.d/20-dns-privileged-port.conf
 ```
 
 2. **Optimize kernel buffers**:
-Unbound is configured with a larger kernel buffer so that no messages are lost during spikes in the traffic. To match the parameters in `unbound/unbound.conf` run:
+   Unbound is configured with a larger kernel buffer so that no messages are lost during spikes in the traffic. To match the parameters in `unbound/unbound.conf` run:
 
 ```bash
 sudo sysctl -w net.core.rmem_max=4194304
@@ -107,7 +109,7 @@ Test your DNS setup with these tools:
 ## 📊 Ports
 
 | Port | Protocol | Service  | Description                             |
-|------|----------|----------|-----------------------------------------|
+| ---- | -------- | -------- | --------------------------------------- |
 | 53   | TCP/UDP  | DNS      | Primary DNS resolver                    |
 | 80   | TCP      | HTTP     | AdGuard Home web panel                  |
 | 3000 | TCP      | HTTP     | Initial setup **(disable after setup)** |
@@ -119,7 +121,7 @@ Test your DNS setup with these tools:
 The following ports are commented out in `compose.yml` but can be enabled as needed:
 
 | Port | Protocol | Service       | Description                   |
-|------|----------|---------------|-------------------------------|
+| ---- | -------- | ------------- | ----------------------------- |
 | 443  | TCP/UDP  | HTTPS         | AdGuard Home web panel HTTPS  |
 | 784  | UDP      | DNS-over-QUIC | Modern encrypted DNS protocol |
 | 853  | TCP      | DNS-over-TLS  | Encrypted DNS over TLS        |
@@ -131,7 +133,7 @@ The following ports are commented out in `compose.yml` but can be enabled as nee
 Unbound is configured to use [Oblivious DNS-over-HTTPS](https://github.com/DNSCrypt/dnscrypt-proxy/wiki/Oblivious-DoH) via `dnscrypt-proxy`. DNS over TLS is querying Cloudflare upstream endpoints. All configuration files are mounted as volumes for easy customization:
 
 - **`unbound/unbound.conf`** - Unbound DNS resolver settings
-- **`dnscrypt/dnscrypt-proxy.toml`** - DNSCrypt-proxy configuration  
+- **`dnscrypt/dnscrypt-proxy.toml`** - DNSCrypt-proxy configuration
 - **`adguard/adguard/opt-adguard-conf`** - AdGuard Home configuration
 - **`adguard/adguard/opt-adguard-work`** - AdGuard Home data
 
