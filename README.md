@@ -2,11 +2,13 @@
 
 ![AdGuard Home](https://img.shields.io/badge/AdGuard%20Home-v0.107.63-green?logo=adguard)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/igoresso/aduncrypt/publish.yml?branch=master&label=Build&logo=github)
+![License](https://img.shields.io/github/license/igoresso/aduncrypt?logo=github)
+![Multi-Arch](https://img.shields.io/badge/platform-linux%2Famd64%20%7C%20linux%2Farm64%20%7C%20linux%2Farm%2Fv7-blue?logo=docker)
 ![DNS Flow](https://img.shields.io/badge/DNS%20Flow-AdGuard%20→%20Unbound%20→%20DNSCrypt-blue)
 ![Privacy](https://img.shields.io/badge/Privacy-ODoH%20Enabled-green)
 ![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%20Ready-orange)
 
-A containerized DNS privacy solution combining [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome), [Unbound](https://nlnetlabs.nl/projects/unbound/about/), and [DNSCrypt-proxy\*(https://github.com/DNSCrypt/dnscrypt-proxy) for enhanced privacy and ad-blocking. This project was inspired by [AdGuard-WireGuard-Unbound-DNScrypt](https://github.com/trinib/AdGuard-WireGuard-Unbound-DNScrypt). The goal is to streamline the original multi-step manual installation into a single, easy-to-deploy container while maintaining compatibility with standard AdGuard Home volume mappings.
+A containerized DNS privacy solution combining [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome), [Unbound](https://nlnetlabs.nl/projects/unbound/about/), and [DNSCrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy) for enhanced privacy and ad-blocking. This project was inspired by [AdGuard-WireGuard-Unbound-DNScrypt](https://github.com/trinib/AdGuard-WireGuard-Unbound-DNScrypt). The goal is to streamline the original multi-step manual installation into a single, easy-to-deploy container while maintaining compatibility with standard AdGuard Home volume mappings.
 
 ## ✨ Features
 
@@ -67,7 +69,7 @@ systemctl --user enable --now podman-restart.service
 
 ### Configure AdGuard Home
 
-1. Delete everything from both _Upstream and Bootstrap DNS servers_ options and add the following address to point at the Unbound resolver:
+1. Delete everything from both **Upstream and Bootstrap DNS servers** options and add the following address to point at the Unbound resolver:
 
 - `127.0.0.1:5053` Unbound
 - `127.0.0.1:5353` Direct fallback to Oblivious DNS over HTTPS
