@@ -37,15 +37,19 @@ jobs:
             echo "ℹ️  No update needed, already on latest version: ${{ steps.current.outputs.CURRENT_VERSION }}"
           fi
 
-      - name: Update Containerfile
+      - name: Update Containerfile and README
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
         run: |
           # Update Containerfile
           sed -i "s/AGH_VER=${{ steps.current.outputs.CURRENT_VERSION }}/AGH_VER=${{ steps.latest.outputs.LATEST_VERSION }}/" Containerfile
 
+          # Update README badge
+          sed -i "s/AdGuard%20Home-v[^-]*-green/AdGuard%20Home-${{ steps.latest.outputs.LATEST_VERSION }}-green/" README.md
+
           # Verify changes
           echo "✅ Updated files:"
           grep "AGH_VER=" Containerfile
+          grep "AdGuard.*Home.*badge" README.md
 
       - name: Create Pull Request
         if: steps.check.outputs.UPDATE_NEEDED == 'true'

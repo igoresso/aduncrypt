@@ -1,6 +1,6 @@
 # 🔒 AdUnCrypt - Privacy-Focused DNS Stack
 
-![AdGuard Home](https://img.shields.io/badge/dynamic/dockerfile?url=https%3A%2F%2Fraw.githubusercontent.com%2Figoresso%2Faduncrypt%2Fmaster%2FContainerfile&query=%24..AGH_VER&label=AdGuard%20Home&color=green&logo=adguard)
+![AdGuard Home](https://img.shields.io/badge/AdGuard%20Home-v0.107.63-green?logo=adguard)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/igoresso/aduncrypt/publish.yml?branch=master&label=Build&logo=github)
 ![DNS Flow](https://img.shields.io/badge/DNS%20Flow-AdGuard%20→%20Unbound%20→%20DNSCrypt-blue)
 ![Privacy](https://img.shields.io/badge/Privacy-ODoH%20Enabled-green)
