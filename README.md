@@ -6,7 +6,7 @@
 ![Privacy](https://img.shields.io/badge/Privacy-ODoH%20Enabled-green)
 ![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%20Ready-orange)
 
-A containerized DNS privacy solution combining [**AdGuard Home**](https://github.com/AdguardTeam/AdGuardHome), [**Unbound**](https://nlnetlabs.nl/projects/unbound/about/), and [**DNSCrypt-proxy**](https://github.com/DNSCrypt/dnscrypt-proxy) for enhanced privacy and ad-blocking. This project was inspired by [AdGuard-WireGuard-Unbound-DNScrypt](https://github.com/trinib/AdGuard-WireGuard-Unbound-DNScrypt). The goal is to streamline the original multi-step manual installation into a single, easy-to-deploy container while maintaining compatibility with standard AdGuard Home volume mappings.
+A containerized DNS privacy solution combining [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome), [Unbound](https://nlnetlabs.nl/projects/unbound/about/), and [DNSCrypt-proxy\*(https://github.com/DNSCrypt/dnscrypt-proxy) for enhanced privacy and ad-blocking. This project was inspired by [AdGuard-WireGuard-Unbound-DNScrypt](https://github.com/trinib/AdGuard-WireGuard-Unbound-DNScrypt). The goal is to streamline the original multi-step manual installation into a single, easy-to-deploy container while maintaining compatibility with standard AdGuard Home volume mappings.
 
 ## ✨ Features
 
@@ -102,9 +102,9 @@ echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf
 
 Test your DNS setup with these tools:
 
-- **[1.1.1.1 Help](https://1.1.1.1/help)** - Basic connectivity test
-- **[BrowserLeaks DNS](https://browserleaks.com/dns)** - Should show "Cloudflare"
-- **[DNSCheck Tools](https://dnscheck.tools/)** - Comprehensive DNS analysis
+- [1.1.1.1 Help](https://1.1.1.1/help) - Basic connectivity test
+- [BrowserLeaks DNS](https://browserleaks.com/dns) - Should show "Cloudflare"
+- [DNSCheck Tools](https://dnscheck.tools/) - Comprehensive DNS analysis
 
 ## 📊 Ports
 
