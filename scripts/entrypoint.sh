@@ -2,12 +2,6 @@
 
 crond -b
 
-# Start Unbound
-if [ ! -f /var/lib/unbound/root.key ]; then
-  echo "Bootstrapping the root trust anchor for DNSSEC validation..."
-  unbound-anchor -a /var/lib/unbound/root.key
-fi
-
 echo "Checking unbound configuration..."
 unbound-checkconf /opt/unbound/unbound.conf
 if [ $? -ne 0 ]; then
@@ -15,22 +9,28 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "Starting Unbound DNS resolver..."
-unbound -d -c /opt/unbound/unbound.conf &
-if [ $? -ne 0 ]; then
-  echo "Failed to start unbound: $?"
-  exit 1
-fi
-
 # Start DNSCrypt-Proxy
 echo "Starting DNSCrypt-Proxy..."
 dnscrypt-proxy -config /opt/dnscrypt/dnscrypt-proxy.toml &
 if [ $? -ne 0 ]; then
-  echo "Failed to start dnscrypt-proxy: $?"
+  echo "Failed to start DNSCrypt-Proxy: $?"
   exit 1
 fi
 
 sleep 5  # Wait for DNSCrypt-Proxy to initialize
+
+# Start Unbound
+if [ ! -f /var/lib/unbound/root.key ]; then
+  echo "Bootstrapping the root trust anchor for DNSSEC validation..."
+  unbound-anchor -a /var/lib/unbound/root.key
+fi
+
+echo "Starting Unbound DNS resolver..."
+unbound -d -c /opt/unbound/unbound.conf &
+if [ $? -ne 0 ]; then
+  echo "Failed to start Unbound: $?"
+  exit 1
+fi
 
 # Start AdGuard Home
 echo "Starting AdGuard Home..."

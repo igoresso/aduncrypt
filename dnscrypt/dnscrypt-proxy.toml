@@ -1,18 +1,18 @@
-# More info about dnscrypt-proxy configuration settings
+# More info about dnscrypt-proxy configuration settings:
 # go to: https://github.com/DNSCrypt/dnscrypt-proxy/blob/master/dnscrypt-proxy/example-dnscrypt-proxy.toml
 
 # List of local addresses and ports to listen to. Can be IPv4 and/or IPv6.
 # Example:
-#   - listen both IPv4 and IPv6: listen_addresses = ['127.0.0.1:53', '[::1]:53']
-#   - listen all IPv4 addresses: listen_addresses = ['0.0.0.0:53']
-#   - listen all IPv4+IPv6 addresses, use `listen_addresses = ['[::]:53']`
+#   - listen to both IPv4 and IPv6: listen_addresses = ['127.0.0.1:53', '[::1]:53']
+#   - listen to all IPv4 addresses: listen_addresses = ['0.0.0.0:53']
+#   - listen to all IPv4+IPv6 addresses: use `listen_addresses = ['[::]:53']`
 listen_addresses = ['127.0.0.1:5353']
- 
+
 # Use servers reachable over IPv6
 ipv6_servers = false
 block_ipv6 = false
 
-# Enable a DNS cache to reduce latency and outgoing traffic (set false if using Unbound)
+# Enable a DNS cache to reduce latency and outgoing traffic (set to false if using Unbound)
 cache = false
 
 # Use servers implementing the specific protocol
@@ -20,10 +20,10 @@ dnscrypt_servers = false
 odoh_servers = true
 doh_servers = false
 
-# You can choose other servers from public resolver list that is fastest for you
-# go to: https://github.com/DNSCrypt/dnscrypt-resolvers/blob/master/v3/public-resolvers.md
+# You can choose other servers from the public resolver list that is fastest for you.
+# Go to: https://github.com/DNSCrypt/dnscrypt-resolvers/blob/master/v3/public-resolvers.md
 
-# Currently configured for oDoH (Oblivious DoH) with Cloudflare
+# Currently configured for ODoH (Oblivious DoH) with Cloudflare
 server_names = ['odoh-cloudflare']
 
 # Servers
@@ -44,10 +44,10 @@ server_names = ['odoh-cloudflare']
   refresh_delay = 72
   prefix = ''
 
-# oDoH server and relay is already set here. For more servers and relays 
+# ODoH server and relay are already set here. For more servers and relays,
 # go to: https://github.com/DNSCrypt/dnscrypt-proxy/wiki/Oblivious-DoH
 # For DoH(dnscrypt) server with anonymized DNS, replace odoh-cloudflare with 'dnscrypt.ca-1'
-# For DoH(dnscrypt) relays set to ['*'] for random server(could get a slow 1) 
+# For DoH(dnscrypt) relays, set to ['*'] for random server (could get a slow one)
 # or choose a relay server that is fastest for you: https://github.com/DNSCrypt/dnscrypt-resolvers/blob/master/v3/relays.md
 [anonymized_dns]
 routes = [
