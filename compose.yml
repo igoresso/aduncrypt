@@ -1,20 +1,21 @@
 services:
   aduncrypt:
-    image: ghcr.io/igoresso/aduncrypt
+    image: ghcr.io/igoresso/aduncrypt:latest
     restart: unless-stopped
+    labels:
+      - "io.containers.autoupdate=registry" # Enable auto-updates
     volumes:
       - "./adguard/opt-adguard-work:/opt/adguardhome/work"
       - "./adguard/opt-adguard-conf:/opt/adguardhome/conf"
       - "./unbound/unbound.conf:/opt/unbound/unbound.conf"
       - "./dnscrypt:/opt/dnscrypt"
     ports:
-      - 53:53/tcp # Primary DNS
-      - 53:53/udp # Primary DNS
-      - 3000:3000/tcp # AdGuard Home install web panel. Disable after installation is completed.
-      - 80:80/tcp # AdGuard Home web panel HTTP
-      #- 443:443/tcp # AdGuard Home web panel HTTPS
-      #- 443:443/udp # AdGuard Home web panel HTTPS
-      #- 784:784/udp # AdGuard Home DNS-over-QUIC service
-      #- 853:853/tcp # AdGuard Home DNS-over-TLS/QUIC service
-      #- 67:67/udp # DHCP server
-      #- 68:68/udp # DHCP server
+      - 53:53/tcp # DNS
+      - 53:53/udp # DNS
+      - 3000:3000/tcp # AdGuard Home install wizard. Should be removed after setup.
+      - 80:80/tcp # AdGuard Home HTTP
+      #- 443:443/tcp # AdGuard Home HTTPS
+      #- 443:443/udp # AdGuard Home HTTPS
+      #- 853:853/tcp # AdGuard Home DNS-over-TLS/QUIC
+      #- 67:67/udp # AdGuard Home DHCP (server)
+      #- 68:68/udp # AdGuard Home DHCP (client)
