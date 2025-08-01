@@ -8,7 +8,7 @@ on:
       - "README.md"
       - "*.md"
       - ".gitignore"
-      - ".github/workflows/update-version.yml"
+      - ".github/workflows/update-version.yml" # Don't trigger on workflow updates
   pull_request:
     branches: [master]
     paths-ignore:
@@ -70,6 +70,102 @@ jobs:
             org.opencontainers.image.vendor=${{ github.repository_owner }}
             org.opencontainers.image.licenses=MIT
 
+      - name: Build Docker image for testing
+        id: build-test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Containerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: test-image:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Security scan & functionality test
+        timeout-minutes: 10
+        run: |
+          IMAGE_REF="test-image:latest"
+
+          echo "🔍 Running vulnerability scan..."
+          # Mount current directory to access the SARIF file from host
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}:/workspace \
+            aquasec/trivy:latest image --format sarif --output /workspace/trivy-results.sarif $IMAGE_REF || true
+
+          echo "🧪 Testing DNS resolution chain..."
+          if ! docker run --rm --name aduncrypt-test -d --platform linux/amd64 test-image:latest; then
+            echo "❌ Failed to start container"
+            exit 1
+          fi
+
+          echo "⏳ Waiting for services to start..."
+          sleep 10
+
+          echo "🔍 Checking service processes..."
+          if docker exec aduncrypt-test pgrep unbound > /dev/null 2>&1; then
+            echo "✅ Unbound process running"
+          else
+            echo "❌ Unbound not running" && exit 1
+          fi
+
+          if docker exec aduncrypt-test pgrep dnscrypt-proxy > /dev/null 2>&1; then
+            echo "✅ DNSCrypt-proxy process running"
+          else
+            echo "❌ DNSCrypt-proxy not running" && exit 1
+          fi
+
+          if docker exec aduncrypt-test pgrep AdGuardHome > /dev/null 2>&1; then
+            echo "✅ AdGuard Home process running"
+          else
+            echo "❌ AdGuard Home not running" && exit 1
+          fi
+
+          echo "🔍 Testing AdGuard Home web interface..."
+          for i in {1..5}; do
+            if docker exec aduncrypt-test wget -q --spider --timeout=10 http://127.0.0.1:3000 > /dev/null 2>&1; then
+              echo "✅ AdGuard Home web interface accessible"
+              break
+            fi
+            echo "⏳ Attempt $i/5: Waiting for AdGuard Home web interface..."
+            sleep 5
+            if [ $i -eq 5 ]; then
+              echo "❌ AdGuard Home web interface not accessible after 25 seconds"
+              exit 1
+            fi
+          done
+
+          echo "🌐 Testing DNS resolution chain..."
+
+          # Test DNSCrypt-proxy
+          DNSCRYPT_RESULT=$(docker exec aduncrypt-test dig @127.0.0.1 -p 5353 google.com +short | head -1)
+          if [ -n "$DNSCRYPT_RESULT" ]; then
+            echo "✅ DNSCrypt-proxy (port 5353) responding → $DNSCRYPT_RESULT"
+          else
+            echo "❌ DNSCrypt-proxy not responding" && exit 1
+          fi
+
+          # Test Unbound
+          UNBOUND_RESULT=$(docker exec aduncrypt-test dig @127.0.0.1 -p 5053 google.com +short | head -1)
+          if [ -n "$UNBOUND_RESULT" ]; then
+            echo "✅ Unbound (port 5053) responding → $UNBOUND_RESULT"
+          else
+            echo "❌ Unbound not responding" && exit 1
+          fi
+
+          # Test DNSSEC validation
+          echo "🔒 Testing DNSSEC validation..."
+          if docker exec aduncrypt-test dig @127.0.0.1 -p 5053 dnssec-failed.org +dnssec | grep -q "SERVFAIL"; then
+            echo "✅ DNSSEC validation working (correctly rejecting invalid signatures)"
+          else
+            echo "❌ DNSSEC validation not working" && exit 1
+          fi
+
+          # Cleanup
+          docker stop aduncrypt-test
+          echo "🎉 All tests passed! DNS privacy stack is working correctly."
+
       - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
@@ -78,17 +174,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push Docker image
-        id: build
+      - name: Build & push Docker image (multi-arch)
+        if: github.event_name != 'pull_request'
+        id: build-push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Containerfile
           platforms: ${{ github.event.inputs.platforms || 'linux/amd64,linux/arm64,linux/arm/v7' }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ steps.meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.extract-version.outputs.AGH_VERSION }}
+          push: true # NOW we can push
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: |
             index:org.opencontainers.image.description=Privacy-focused DNS stack with AdGuard Home, Unbound, and DNSCrypt-proxy
@@ -98,116 +193,6 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: true
           sbom: true
-
-      - name: Security scan & functionality test
-        if: github.event_name != 'pull_request'
-        timeout-minutes: 10
-        run: |
-          IMAGE_REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-
-          echo "🔍 Running vulnerability scan..."
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}:/workspace \
-            aquasec/trivy:latest image --format sarif --output /workspace/trivy-results.sarif $IMAGE_REF || true
-
-          echo "🧪 Testing DNS resolution chain..."
-          docker run --rm --name aduncrypt-test -d --privileged --platform linux/amd64 $IMAGE_REF
-
-          echo "⏳ Waiting for services to start..."
-          sleep 15  # Increased wait time
-
-          # Check if container is still running
-          if ! docker ps | grep -q aduncrypt-test; then
-            echo "❌ Container exited unexpectedly"
-            echo "📋 Container logs:"
-            docker logs aduncrypt-test 2>&1 || true
-            exit 1
-          fi
-
-          echo "🔍 Checking service processes..."
-          if docker exec aduncrypt-test pgrep unbound > /dev/null 2>&1; then
-            echo "✅ Unbound process running"
-          else
-            echo "❌ Unbound not running"
-            echo "📋 Container logs:"
-            docker logs aduncrypt-test 2>&1 || true
-            docker stop aduncrypt-test 2>/dev/null || true
-            exit 1
-          fi
-
-          if docker exec aduncrypt-test pgrep dnscrypt-proxy > /dev/null 2>&1; then
-            echo "✅ DNSCrypt-proxy process running"
-          else
-            echo "❌ DNSCrypt-proxy not running"
-            echo "📋 Container logs:"
-            docker logs aduncrypt-test 2>&1 || true
-            docker stop aduncrypt-test 2>/dev/null || true
-            exit 1
-          fi
-
-          if docker exec aduncrypt-test pgrep AdGuardHome > /dev/null 2>&1; then
-            echo "✅ AdGuard Home process running"
-          else
-            echo "❌ AdGuard Home not running"
-            echo "📋 Container logs:"
-            docker logs aduncrypt-test 2>&1 || true
-            docker stop aduncrypt-test 2>/dev/null || true
-            exit 1
-          fi
-
-          echo "🔍 Testing AdGuard Home web interface..."
-          for i in {1..6}; do
-            if docker exec aduncrypt-test wget -q --spider --timeout=10 http://127.0.0.1:3000 > /dev/null 2>&1; then
-              echo "✅ AdGuard Home web interface accessible"
-              break
-            fi
-            echo "⏳ Attempt $i/6: Waiting for AdGuard Home web interface..."
-            sleep 5
-            if [ $i -eq 6 ]; then
-              echo "❌ AdGuard Home web interface not accessible after 30 seconds"
-              echo "📋 Container logs:"
-              docker logs aduncrypt-test 2>&1 || true
-              docker stop aduncrypt-test 2>/dev/null || true
-              exit 1
-            fi
-          done
-
-          # Test DNS resolution chain (bottom-up)
-          echo "🌐 Testing DNS resolution chain..."
-
-          # Test DNSCrypt-proxy directly (encrypted upstream)
-          DNSCRYPT_RESULT=$(docker exec aduncrypt-test dig @127.0.0.1 -p 5353 google.com +short +time=5 | head -1)
-          if [ -n "$DNSCRYPT_RESULT" ]; then
-            echo "✅ DNSCrypt-proxy (port 5353) responding → $DNSCRYPT_RESULT"
-          else
-            echo "❌ DNSCrypt-proxy not responding"
-            docker logs aduncrypt-test 2>&1 || true
-            docker stop aduncrypt-test 2>/dev/null || true
-            exit 1
-          fi
-
-          # Test Unbound (caching recursive resolver)
-          UNBOUND_RESULT=$(docker exec aduncrypt-test dig @127.0.0.1 -p 5053 google.com +short +time=5 | head -1)
-          if [ -n "$UNBOUND_RESULT" ]; then
-            echo "✅ Unbound (port 5053) responding → $UNBOUND_RESULT"
-          else
-            echo "❌ Unbound not responding"
-            docker logs aduncrypt-test 2>&1 || true
-            docker stop aduncrypt-test 2>/dev/null || true
-            exit 1
-          fi
-
-          # Test DNSSEC validation
-          echo "🔒 Testing DNSSEC validation..."
-          if docker exec aduncrypt-test dig @127.0.0.1 -p 5053 dnssec-failed.org +dnssec +time=10 | grep -q "SERVFAIL"; then
-            echo "✅ DNSSEC validation working (correctly rejecting invalid signatures)"
-          else
-            echo "⚠️ DNSSEC validation test inconclusive (not necessarily an error)"
-          fi
-
-          # Cleanup
-          docker stop aduncrypt-test 2>/dev/null || true
-          echo "🎉 All tests passed! DNS privacy stack is working correctly."
 
       - name: Upload security scan results
         if: github.event_name != 'pull_request'
