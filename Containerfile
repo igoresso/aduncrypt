@@ -31,6 +31,4 @@ EXPOSE 53/tcp 53/udp 67/udp 68/udp 80/tcp 443/tcp 443/udp 853/tcp 853/udp 3000/t
 HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=3 \
     CMD sh /opt/scripts/healthcheck.sh || exit 1
 
-USER nobody
-
 CMD ["/opt/scripts/entrypoint.sh"]
