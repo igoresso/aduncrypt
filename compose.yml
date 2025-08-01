@@ -3,9 +3,6 @@ services:
     image: ghcr.io/igoresso/aduncrypt:latest
     container_name: aduncrypt
     restart: unless-stopped
-    labels:
-      - "io.containers.autoupdate=registry" # Enable auto-updates
-      - "PODMAN_SYSTEMD_UNIT=aduncrypt.service"
     volumes:
       - "./adguard/opt-adguard-work:/opt/adguardhome/work"
       - "./adguard/opt-adguard-conf:/opt/adguardhome/conf"
