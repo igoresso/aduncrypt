@@ -32,7 +32,7 @@ sudo apt install podman podman-compose
 ### System Configuration
 
 1. **Enable privileged port binding** (required for DNS port 53):
-   By default, rootless Podman doesn't allow exposing a privileged port (<1024). Unless you are happy to use an unconventional DNS port, to avoid an error run:
+   By default, rootless Podman doesn't allow exposing a privileged port (<1024). Unless you are happy to use an unconventional DNS port to avoid an error, run:
 
 ```bash
 echo "net.ipv4.ip_unprivileged_port_start=53" | sudo tee /etc/sysctl.d/20-dns-privileged-port.conf
@@ -46,6 +46,8 @@ sudo sysctl -w net.core.rmem_max=4194304
 sudo sysctl -w net.core.wmem_max=4194304
 ```
 
+Reboot for changes to apply.
+
 ### Deployment
 
 Download this repo and spin up a container:
@@ -53,31 +55,26 @@ Download this repo and spin up a container:
 ```bash
 git clone https://github.com/igoresso/aduncrypt.git
 cd aduncrypt
-podman compose up -d
+podman-compose up -d
 ```
 
 ### Initial Setup
 
 1. **Access AdGuard Home** at `http://localhost:3000`
-2. **Follow the setup wizard**
-3. **Remove port 3000** from `compose.yml` after setup
-4. **Enable container auto-start** (optional):
-
-```bash
-systemctl --user enable --now podman-restart.service
-```
+2. **Follow the setup wizard** - use `0.0.0.0:80` for web panel access
+3. **Complete AdGuard Home configuration** (see next section)
 
 ### Configure AdGuard Home
 
-1. Delete everything from both **Upstream and Bootstrap DNS servers** options and add the following address to point at the Unbound resolver:
+1. Delete everything from both **Upstream and Bootstrap DNS servers** options and add the following addresses to point at the Unbound resolver:
 
-- `127.0.0.1:5053` Unbound
-- `127.0.0.1:5353` Direct fallback to Oblivious DNS over HTTPS
+   - `127.0.0.1:5053` (Unbound)
+   - `127.0.0.1:5353` (Direct fallback to Oblivious DNS over HTTPS)
 
-2. Put a tick ☑️ next to _Parallel Request_ option.
-3. In DNS setting look for DNS cache configuration section and set cache size to `0` (caching is already handled by Unbound) and save.
-4. In AdGuard homepage under filters, select DNS blocklist section for adding URLs:
-   - [List of Blocklists and Allowlists Sources](https://github.com/T145/black-mirror/blob/master/dist/SOURCES.md)
+2. Put a tick ☑️ next to **Parallel Request** option.
+3. In DNS settings, set **DNS cache size** to `0` (caching is handled by Unbound)
+4. Add blocklists in **Filters** → **DNS blocklists**:
+   - [Blocklists and Allowlists Sources](https://github.com/T145/black-mirror)
 
 ### Host System DNS Configuration
 
@@ -85,7 +82,9 @@ systemctl --user enable --now podman-restart.service
 
 ```bash
 sudo nano /etc/systemd/resolved.conf
-# Set: DNSStubListener=no
+# Set:
+# DNS=127.0.0.1
+# DNSStubListener=no
 sudo systemctl restart systemd-resolved
 ```
 
@@ -100,15 +99,78 @@ cat /etc/resolv.conf
 echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf
 ```
 
+### Enable Auto-Start (Optional)
+
+After completing initial setup, switch to the secure systemd deployment using Podman Quadlet:
+
+```bash
+# Stop compose (no longer needed)
+podman-compose down
+
+# Create systemd directory
+mkdir -p ~/.config/containers/systemd
+
+# Copy the quadlet container file to the systemd directory
+cp aduncrypt.container ~/.config/containers/systemd/aduncrypt.container
+
+# Reload systemd to recognize the new quadlet
+systemctl --user daemon-reload
+
+# Enable and start the service
+systemctl --user enable --now aduncrypt.service
+
+# Enable lingering for auto-start on boot
+sudo loginctl enable-linger $USER
+
+# Enable auto-updates
+systemctl --user enable --now podman-auto-update.timer
+```
+
+### Alternative: Keep Using Compose
+
+If you prefer manual management:
+
+```bash
+# Just restart when needed
+podman-compose up -d
+```
+
+**Note**: Manual restart required after system reboot.
+
+### Verify everything is working
+
+```bash
+
+# Check service status (if using Quadlet)
+systemctl --user status aduncrypt.service
+
+# Check container is running
+podman ps
+
+# View logs (if using compose)
+podman-compose logs -f aduncrypt
+
+# Test DNS resolution
+dig @127.0.0.1 google.com
+
+# Test auto-update capability
+podman auto-update --dry-run
+
+# Monitor logs (if using Quadlet)
+journalctl --user -u aduncrypt.service -f
+```
+
 ## 🧪 Verification
 
 Test your DNS setup with these tools:
 
 - [1.1.1.1 Help](https://1.1.1.1/help) - Basic connectivity test
-- [BrowserLeaks DNS](https://browserleaks.com/dns) - Should show "Cloudflare"
+- [BrowserLeaks DNS](https://browserleaks.com/dns) - Should show "Cloudflare" if nothing is changed
 - [DNSCheck Tools](https://dnscheck.tools/) - Comprehensive DNS analysis
 
 ## 📊 Ports
+
+### Default Ports
 
 | Port | Protocol | Service  | Description                             |
 | ---- | -------- | -------- | --------------------------------------- |
@@ -118,9 +180,11 @@ Test your DNS setup with these tools:
 | 5053 | TCP/UDP  | Internal | Unbound DNS resolver                    |
 | 5353 | TCP/UDP  | Internal | DNSCrypt-proxy                          |
 
+**Note**: The quadlet configuration doesn't expose port 3000. Complete the initial AdGuard Home setup using the compose method first, then switch to quadlet for production deployment.
+
 ### Optional Ports
 
-The following ports are commented out in `compose.yml` but can be enabled as needed:
+The following ports are commented out in `compose.yml` but can be enabled as needed. For quadlet users, add them to your `aduncrypt.container` file using `PublishPort=` directives:
 
 | Port | Protocol | Service       | Description                   |
 | ---- | -------- | ------------- | ----------------------------- |
