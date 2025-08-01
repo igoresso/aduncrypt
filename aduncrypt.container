@@ -1,0 +1,27 @@
+[Unit]
+Description=AdUnCrypt DNS Stack
+Documentation=https://github.com/igoresso/aduncrypt
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/igoresso/aduncrypt:latest
+ContainerName=aduncrypt
+AutoUpdate=registry
+
+Volume=./adguard/opt-adguard-work:/opt/adguardhome/work
+Volume=./adguard/opt-adguard-conf:/opt/adguardhome/conf
+Volume=./unbound/unbound.conf:/opt/unbound/unbound.conf
+Volume=./dnscrypt:/opt/dnscrypt
+
+PublishPort=53:53/tcp
+PublishPort=53:53/udp
+PublishPort=80:80/tcp
+PublishPort=3000:3000/tcp
+
+[Service]
+Restart=unless-stopped
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target
