@@ -70,14 +70,13 @@ jobs:
             org.opencontainers.image.vendor=${{ github.repository_owner }}
             org.opencontainers.image.licenses=MIT
 
-      - name: Build Docker image for testing
+      - name: Build for testing
         id: build-test
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Containerfile
           platforms: linux/amd64
-          push: false
           load: true
           tags: test-image:latest
           cache-from: type=gha
@@ -174,21 +173,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push Docker image (multi-arch)
+      - name: Build and push multi-arch
         if: github.event_name != 'pull_request'
-        id: build-push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Containerfile
           platforms: ${{ github.event.inputs.platforms || 'linux/amd64,linux/arm64,linux/arm/v7' }}
-          push: true # NOW we can push
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          annotations: |
-            index:org.opencontainers.image.description=Privacy-focused DNS stack with AdGuard Home, Unbound, and DNSCrypt-proxy
-            index:org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            index:org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/master/README.md
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: true
