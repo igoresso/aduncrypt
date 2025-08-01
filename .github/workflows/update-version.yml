@@ -59,19 +59,19 @@ jobs:
           commit-message: "Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
           title: "Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
           body: |
-            ## 🔄 AdGuard Home Version Update
+            ## 🆙 AdGuard Home Version Update
 
             **Current version:** `${{ steps.current.outputs.CURRENT_VERSION }}`
             **New version:** `${{ steps.latest.outputs.LATEST_VERSION }}`
 
-            ### Changes
+            ### 📝 Changes
             - Updated `AGH_VER` in Containerfile
             - Updated README badge
 
-            ### Links
-            - 📋 [Release Notes](https://github.com/AdguardTeam/AdGuardHome/releases/tag/${{ steps.latest.outputs.LATEST_VERSION }})
+            ### 🔗 Links
+            - [Release Notes](https://github.com/AdguardTeam/AdGuardHome/releases/tag/${{ steps.latest.outputs.LATEST_VERSION }})
 
             ---
-            *This PR was created automatically by the update-version workflow*
+            🤖 *This PR was created automatically by the update-version workflow*
           branch: update-agh-${{ steps.latest.outputs.LATEST_VERSION }}
           delete-branch: true
