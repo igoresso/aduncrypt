@@ -1,29 +1,33 @@
 # Build files
-
 Containerfile
 compose.yml
 .containerignore
+*.container
+
+# GitHub and CI/CD
+.github/
+*.yml
+*.yaml
 
 # Git and documentation
-
 .git
 .gitignore
 README.md
 \*.md
+LICENSE*
+CHANGELOG*
+CONTRIBUTING*
 
 # Runtime data (these are mounted as volumes)
-
 adguard/opt-adguard-work/
 adguard/opt-adguard-conf/
 
 # Development files
-
 .vscode/
 _.log
 _.tmp
 
 # OS files
-
 .DS_Store
 Thumbs.db
 *~
