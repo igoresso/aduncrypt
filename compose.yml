@@ -1,9 +1,11 @@
 services:
   aduncrypt:
     image: ghcr.io/igoresso/aduncrypt:latest
+    container_name: aduncrypt
     restart: unless-stopped
     labels:
       - "io.containers.autoupdate=registry" # Enable auto-updates
+      - "PODMAN_SYSTEMD_UNIT=aduncrypt.service"
     volumes:
       - "./adguard/opt-adguard-work:/opt/adguardhome/work"
       - "./adguard/opt-adguard-conf:/opt/adguardhome/conf"
@@ -12,8 +14,8 @@ services:
     ports:
       - 53:53/tcp # DNS
       - 53:53/udp # DNS
-      - 3000:3000/tcp # AdGuard Home install wizard. Should be removed after setup.
       - 80:80/tcp # AdGuard Home HTTP
+      - 3000:3000/tcp # AdGuard Home install wizard (remove after setup)
       #- 443:443/tcp # AdGuard Home HTTPS
       #- 443:443/udp # AdGuard Home HTTPS
       #- 853:853/tcp # AdGuard Home DNS-over-TLS/QUIC
