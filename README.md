@@ -2,7 +2,7 @@
 
 ![AdGuard Home](https://img.shields.io/badge/AdGuard%20Home-v0.107.63-green?logo=adguard)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/igoresso/aduncrypt/publish.yml?branch=master&label=Build&logo=github)
-![License](https://img.shields.io/github/license/igoresso/aduncrypt?logo=github)
+![License](https://img.shields.io/github/license/igoresso/aduncrypt?logo=gnu)
 ![Multi-Arch](https://img.shields.io/badge/platform-linux%2Famd64%20%7C%20linux%2Farm64%20%7C%20linux%2Farm%2Fv7-blue?logo=docker)
 ![DNS Flow](https://img.shields.io/badge/DNS%20Flow-AdGuard%20→%20Unbound%20→%20DNSCrypt-blue)
 ![Privacy](https://img.shields.io/badge/Privacy-ODoH%20Enabled-green)
