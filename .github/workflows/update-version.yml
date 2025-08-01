@@ -57,7 +57,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
-          title: "🚀 Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
+          title: "Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
           body: |
             ## 🔄 AdGuard Home Version Update
 
@@ -66,11 +66,10 @@ jobs:
 
             ### Changes
             - Updated `AGH_VER` in Containerfile
-            - This will trigger a new multi-architecture build when merged
+            - Updated README badge
 
             ### Links
             - 📋 [Release Notes](https://github.com/AdguardTeam/AdGuardHome/releases/tag/${{ steps.latest.outputs.LATEST_VERSION }})
-            - 🔗 [Container Registry](https://github.com/${{ github.repository_owner }}/pkgs/container/aduncrypt)
 
             ---
             *This PR was created automatically by the update-version workflow*
