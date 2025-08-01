@@ -17,7 +17,6 @@ Volume=./dnscrypt:/opt/dnscrypt
 PublishPort=53:53/tcp
 PublishPort=53:53/udp
 PublishPort=80:80/tcp
-PublishPort=3000:3000/tcp
 
 [Service]
 Restart=unless-stopped
