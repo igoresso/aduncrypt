@@ -61,12 +61,11 @@ podman-compose up -d
 ### Initial Setup
 
 1. **Access AdGuard Home** at `http://localhost:3000`
-2. **Follow the setup wizard** - use `0.0.0.0:80` for web panel access
-3. **Complete AdGuard Home configuration** (see next section)
+2. **Follow the setup wizard** - when asked which interface to listen on, keep **All interfaces**
 
 ### Configure AdGuard Home
 
-1. Delete everything from both **Upstream and Bootstrap DNS servers** options and add the following addresses to point at the Unbound resolver:
+1. Delete everything from both **Upstream** and **Bootstrap DNS servers** options and add the following addresses to point at the Unbound resolver:
 
    - `127.0.0.1:5053` (Unbound)
    - `127.0.0.1:5353` (Direct fallback to Oblivious DNS over HTTPS)
@@ -101,7 +100,7 @@ echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf
 
 ### Enable Auto-Start (Optional)
 
-After completing initial setup, switch to the secure systemd deployment using Podman Quadlet:
+After completing initial setup, switch to the secure systemd deployment using Podman Quadlet (needs podman version >= 4.4):
 
 ```bash
 # Stop compose (no longer needed)
