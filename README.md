@@ -60,7 +60,7 @@ podman-compose up -d
 
 ### Initial Setup
 
-1. **Access AdGuard Home** at `http://localhost:3000`
+1. **Access AdGuard Home** at `http://<host-ip>:3000`, replacing `<host-ip>` with `localhost` if you’re running AdUnCrypt locally
 2. **Follow the setup wizard** - when asked which interface to listen on, keep **All interfaces**
 
 ### Configure AdGuard Home
@@ -70,8 +70,8 @@ podman-compose up -d
    - `127.0.0.1:5053` (Unbound)
    - `127.0.0.1:5353` (Direct fallback to Oblivious DNS over HTTPS)
 
-2. Put a tick ☑️ next to **Parallel Request** option.
-3. In DNS settings, set **DNS cache size** to `0` (caching is handled by Unbound)
+2. Put a tick ☑ next to **Parallel Request** option.
+3. In DNS settings, uncheck **Enable cache** or set **DNS cache size** to `0` (caching is handled by Unbound)
 4. Add blocklists in **Filters** → **DNS blocklists**:
    - [Blocklists and Allowlists Sources](https://github.com/T145/black-mirror)
 
@@ -100,7 +100,10 @@ echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf
 
 ### Enable Auto-Start (Optional)
 
-After completing initial setup, switch to the secure systemd deployment using Podman Quadlet (needs podman version >= 4.4):
+After completing initial setup, switch to the systemd deployment using Podman Quadlet (needs podman version >= 4.4).
+
+> [!IMPORTANT]
+> The provided Quadlet container file assumes that the AdUnCrypt project directory is located in your home folder, i.e. `~/aduncrypt/`. If you cloned it elsewhere, update all volume paths in `aduncrypt.container` accordingly — for example, replace `%h/aduncrypt/...` with the absolute path to your local copy.
 
 ```bash
 # Stop compose (no longer needed)
@@ -115,8 +118,8 @@ cp aduncrypt.container ~/.config/containers/systemd/aduncrypt.container
 # Reload systemd to recognize the new quadlet
 systemctl --user daemon-reload
 
-# Enable and start the service
-systemctl --user enable --now aduncrypt.service
+# Start the service
+systemctl --user start aduncrypt.service
 
 # Enable lingering for auto-start on boot
 sudo loginctl enable-linger $USER
@@ -134,7 +137,8 @@ If you prefer manual management:
 podman-compose up -d
 ```
 
-**Note**: Manual restart required after system reboot.
+> [!NOTE]  
+> Manual restart required after system reboot.
 
 ### Verify everything is working
 
@@ -179,7 +183,8 @@ Test your DNS setup with these tools:
 | 5053 | TCP/UDP  | Internal | Unbound DNS resolver                    |
 | 5353 | TCP/UDP  | Internal | DNSCrypt-proxy                          |
 
-**Note**: The quadlet configuration doesn't expose port 3000. Complete the initial AdGuard Home setup using the compose method first, then switch to quadlet for production deployment.
+> [!NOTE]  
+> The Quadlet container doesn't expose port 3000. Complete the initial AdGuard Home setup using the compose method first, then switch to quadlet for production deployment.
 
 ### Optional Ports
 
