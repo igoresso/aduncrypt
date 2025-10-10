@@ -19,7 +19,7 @@ PublishPort=53:53/udp
 PublishPort=80:80/tcp
 
 [Service]
-Restart=unless-stopped
+Restart=always
 TimeoutStartSec=900
 
 [Install]
