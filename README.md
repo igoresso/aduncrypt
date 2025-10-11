@@ -42,11 +42,14 @@ echo "net.ipv4.ip_unprivileged_port_start=53" | sudo tee /etc/sysctl.d/20-dns-pr
    Unbound is configured with a larger kernel buffer so that no messages are lost during spikes in the traffic. To match the parameters in `unbound/unbound.conf` run:
 
 ```bash
-sudo sysctl -w net.core.rmem_max=4194304
-sudo sysctl -w net.core.wmem_max=4194304
+echo "net.core.rmem_max=4194304" | sudo tee /etc/sysctl.d/99-unbound-buffers.conf
+echo "net.core.wmem_max=4194304" | sudo tee -a /etc/sysctl.d/99-unbound-buffers.conf
 ```
 
-Reboot for changes to apply.
+3. **Apply changes**
+```bash
+sudo sysctl --system
+```
 
 ### Deployment
 
@@ -150,8 +153,8 @@ systemctl --user status aduncrypt.service
 # Check container is running
 podman ps
 
-# View logs (if using compose)
-podman-compose logs -f aduncrypt
+# View container logs
+podman logs -f aduncrypt
 
 # Test DNS resolution
 dig @127.0.0.1 google.com
@@ -159,8 +162,8 @@ dig @127.0.0.1 google.com
 # Test auto-update capability
 podman auto-update --dry-run
 
-# Monitor logs (if using Quadlet)
-journalctl --user -u aduncrypt.service -f
+# Monitor systemd logs (if using Quadlet)
+journalctl --user-unit=aduncrypt.service -b
 ```
 
 ## 🧪 Verification
