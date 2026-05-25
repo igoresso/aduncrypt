@@ -5,12 +5,18 @@ on:
     - cron: "0 6 * * *" # Daily at 6 AM
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Get current AGH version from Containerfile
         id: current
@@ -22,29 +28,40 @@ jobs:
       - name: Get latest AGH version
         id: latest
         run: |
-          LATEST=$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | jq -r '.tag_name')
+          LATEST=$(curl -sSf https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | jq -r '.tag_name')
+          # Validate format: vX.Y.Z[-suffix] — reject anything with shell metacharacters
+          if ! [[ "$LATEST" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9]+)*$ ]]; then
+            echo "::error::Refusing to use untrusted upstream tag: $LATEST"
+            exit 1
+          fi
           echo "LATEST_VERSION=$LATEST" >> "$GITHUB_OUTPUT"
           echo "Latest AdGuard Home version: $LATEST"
 
       - name: Check if update is needed
         id: check
+        env:
+          CURRENT_VERSION: ${{ steps.current.outputs.CURRENT_VERSION }}
+          LATEST_VERSION: ${{ steps.latest.outputs.LATEST_VERSION }}
         run: |
-          if [ "${{ steps.current.outputs.CURRENT_VERSION }}" != "${{ steps.latest.outputs.LATEST_VERSION }}" ]; then
+          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
             echo "UPDATE_NEEDED=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Update needed: ${{ steps.current.outputs.CURRENT_VERSION }} → ${{ steps.latest.outputs.LATEST_VERSION }}"
+            echo "✅ Update needed: $CURRENT_VERSION → $LATEST_VERSION"
           else
             echo "UPDATE_NEEDED=false" >> "$GITHUB_OUTPUT"
-            echo "ℹ️  No update needed, already on latest version: ${{ steps.current.outputs.CURRENT_VERSION }}"
+            echo "ℹ️  No update needed, already on latest version: $CURRENT_VERSION"
           fi
 
       - name: Update Containerfile and README
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
+        env:
+          CURRENT_VERSION: ${{ steps.current.outputs.CURRENT_VERSION }}
+          LATEST_VERSION: ${{ steps.latest.outputs.LATEST_VERSION }}
         run: |
           # Update Containerfile
-          sed -i "s/AGH_VER=${{ steps.current.outputs.CURRENT_VERSION }}/AGH_VER=${{ steps.latest.outputs.LATEST_VERSION }}/" Containerfile
+          sed -i "s/AGH_VER=${CURRENT_VERSION}/AGH_VER=${LATEST_VERSION}/" Containerfile
 
           # Update README badge
-          sed -i "s/AdGuard%20Home-v[^-]*-green/AdGuard%20Home-${{ steps.latest.outputs.LATEST_VERSION }}-green/" README.md
+          sed -i "s/AdGuard%20Home-v[^-]*-green/AdGuard%20Home-${LATEST_VERSION}-green/" README.md
 
           # Verify changes
           echo "✅ Updated files:"
@@ -53,7 +70,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update AdGuard Home to ${{ steps.latest.outputs.LATEST_VERSION }}"
